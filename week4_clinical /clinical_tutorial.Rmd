@@ -1,0 +1,207 @@
+---
+title: "Working with TCGA Clinical Information"
+author: "Kate Guion"
+date: "09/30/2021"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_depth: 2
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+library(TCGAbiolinks)
+```
+
+**NOTE: before doing anything, COPY THIS FILE to your GitHub repository.**
+
+Last time (or just a few minutes ago), you were introduced to TCGAbiolinks. We will now use it to download clinical data!
+"STAD" refers to stomach cancer (stomach adenocarcinoma, more specifically).
+```{r}
+clin_query <- GDCquery(project = "TCGA-STAD", data.category = "Clinical", file.type = "xml")
+GDCdownload( clin_query ) #Only use this line ONCE! Comment out after you have downloaded the data. 
+clinic <- GDCprepare_clinic(clin_query, clinical.info = "patient")
+names( clinic )[names(clinic)=="days_to_last_followup"] <- "days_to_last_follow_up" #This fixes an error in the name of the column
+```
+
+The previous lines looked for the data on the internet via GDCquery, and then downloaded the clinical data to your computer. Try to find where this data was saved! Hint: use `getwd()` and look in that folder either on your visual file system or your Linux terminal.
+
+Use the `str()` and `head()` functions to look at the clinic data. Each cancer type will have different clinical variables available.
+```{r}
+str(clinic)
+head( "fill in here" )
+```
+
+Check for understanding: What is the difference between str() and head()?
+
+
+Use the function `colnames()` to look at the column available in the clinic dataframe. Each of the column names here was also listed with a `$` when the str() function was used. Access a specific column via the `$`.
+```{r}
+colnames(clinic)
+clinic$vital_status
+clinic$"fill in here" #choose another column to look at. When filling in, you can remove the quotation marks
+
+clinic$vital_status[1:5] #this shows the vital_status column for the first 5 patients
+
+head( clinic$"fill in here" ) #What does this do?
+```
+
+Graphs for Demographic Variables
+
+First we will make a scatterplot of age and weight
+Determine the column names of age and weight.
+Then use `plot()` to create a scatterplot of age and weight.
+The `plot()` function is used in the form `plot(x, y).`
+```{r}
+plot( clinic$"fill in age column name", clinic$"fill in weight column name", xlab = "add x axis label", ylab = "add y axis label", main = "cool and descriptive title!" )
+```
+
+Next we will make a boxplot of age and race.
+The `boxplot()` function uses the formula notation. Remember $y = mx + b$? Here we have `y ~ x` (generally, in R syntax, `y ~ x` denotes `y` as a function of R).
+Use `colnames()` to find the column name for race. 
+```{r}
+unique( clinic$"fill in race column here" ) #This shows you all the UNIQUE entries of the race column
+
+#the mar argument in par() sets the plot margins. As the race names may be long, we want to have a large bottom margin. par(mar = c(bottom, left, top, right)). How does the plot change if you change these margins?
+par(mar=c(10,1,1,1))
+boxplot( clinic$age_at_initial_pathologic_diagnosis ~ clinic$race_list, xlab = "add x axis label", ylab = "add y axis label", main = "cool and descriptive title!", las = 2, cex.axis = 0.5)
+```
+If you notice a missing x axis label, some of your patients may be missing race information. 
+Check this via booleans.
+```{r}
+clinic$race_list == "" #This returns FALSE when the race is NOT empty and TRUE when the race is empty, hence equal to ""
+
+#You can also count the number of missing race entries
+sum( as.numeric( clinic$race_list == ""  )  )
+
+#Remember, the != refers to NOT EQUAL. How many patients HAVE race information? Hint, these patients have race information that does not equal to ""
+
+
+```
+
+Now we are going to focus on age. 
+1. Use the `min()` function to determine the minimum age
+2. Use the `max()` function to determine the maximum age
+3. Use the `mean()` function to determine the mean age
+```{r}
+
+
+
+
+
+```
+
+We will use age to explore boolean indexing and why it is useful!
+We will define "young" as less than 50 years old, and "old" as greater than or equal to 50 years old.
+How many young and old patients are there?
+```{r}
+num_young <- sum( clinic$age_at_initial_pathologic_diagnosis < 50 )
+num_old <- sum( "fill in here!" ) #Remember that the >= is GREATER THAN OR EQUAL TO
+```
+
+What if I want to know the patient id's of young and old patients?
+```{r}
+bool_young <- clinic$age_at_initial_pathologic_diagnosis < 50
+young_patient_ids <- clinic$bcr_patient_barcode[ bool_young ] #Here we are accessing the patient barcode column, but only at locations where the patient's age is < 50 and the patient is therefore young.
+
+length(young_patient_ids) == num_young #Sanity checks are always important!
+
+bool_old <- "fill in here"
+old_patient_ids <- "fill in here"
+```
+
+We can also use an ifelse to add a new column! The `ifelse()` function operates: `ifelse(test, yes, no)`
+```{r}
+clinic$age_category <- ifelse( clinic$age_at_initial_pathologic_diagnosis < 50, "Young", "Old" )
+head( clinic$age_category )
+
+#Do some sanity checks!
+
+sum(bool_young) == sum( as.numeric( clinic$age_category == "fill in here" ) )
+num_old == "fill in here"
+```
+
+
+What if I want all the clinical information of just young patients? First we need to remember how the dataframe is laid out with `dataframe[row, col]` format. 
+Before you run the following lines, try to guess the output!
+```{r}
+clinic[1,1] #This is the top left entry of the dataframe. R has "one-based indexing"
+clinic[1,]
+clinic[2,]
+clinic[,3]
+```
+
+Check your understanding: What is the significance of the comma and leaving a blank before or after?
+
+
+Back to the clinical info of young patients!
+Use boolean indexing to get the clinical info of young patients. Add the comma!!
+Hint: Is the age_category a row or column? Draw it out!
+```{r}
+young_clinic <- clinic[ clinic$age_category == "Young", ] #Add the comma!
+old_clinic <- "fill in here"
+```
+
+Check your understanding of the previous steps: Try to create the young_clinic in ONE LINE using the original age column, not the age_category
+```{r}
+young_clinic_one_line <- "fill in here"
+
+#Check if your dimensions are the same! dim() gives dimensions of a dataframe in number_of_rows, number_of_cols
+identical( dim(young_clinic), dim(young_clinic_one_line)  )
+```
+
+Finally we are going to look at survival via Kaplan Meier Curves.
+***Please be respectful to remember that we are looking at real patients who lived or are living real lives***
+
+1. Look up what a KM curve is
+https://towardsdatascience.com/kaplan-meier-curves-c5768e349479
+https://www.mygreatlearning.com/blog/kaplan-meier-curve-explained/#:~:text=The%20Kaplan%20Meier%20Curve%20is%20the%20visual%20representation%20of%20this,sample%20size%20is%20large%20enough. 
+
+2. Install the "survival" and "survminer" packages with install.packages(). Then load in the packages with library()
+```{r}
+
+
+```
+
+3. We need to know how many days the patient survived. For some patients we have how many days they survived until their death. For others, we may only have the number of days to their last doctor's appointment.
+
+Use an `ifelse()` statement. If `clinic$days_to_death` is not available (NA), then survival will be defined as days_to_last_follow_up. Else, survival will be the clinic$days_to_death
+```{r}
+clinic$survival_time <- ifelse( is.na(  ), "fill in here", "fill in "  )
+```
+
+4. Now we need to know which patients died and which are still alive. Use the vital_status column to determine this. If they are alive, a death event did NOT occur and they will be coded a 0. Otherwise, a death event did occur which will be coded as a 1.
+Hint: Use the `==` to check if something is EQUAL TO. 
+```{r}
+clinic$death_event <- ifelse( "fill in here", 0, 1 )
+```
+
+5. Complete a survival analysis by race
+```{r}
+surv_object <- Surv( time = clinic$survival_time, event = clinic$death_event  )
+race_fit <- surv_fit( surv_object ~ clinic$race_list, data = clinic )
+
+#the ggtheme and legend arguments are for formatting. Feel free to play around with the margins and legend placement
+ggsurvplot( race_fit, pval=TRUE, ggtheme = theme(plot.margin = unit( c(1,1,1,1), "cm") ), legend = "right"   )
+```
+
+Take a moment to look at your plot. What are some key takeaways? What are some questions that it produces? How could it be improved?
+
+
+Finally, we don't want to have to query the clinical file every time we use it. Additionally, we want to save the new columns that we have added. We will save the file as a `.csv` (a `csv` is a spreadsheet format where columns are separated by columns.)
+```{r}
+write.csv(clinic, "/Users/kateguion/Desktop/coad_clinical_data.csv")
+```
+
+Check for understanding! Open your Linux terminal and navigate to where you saved the file. Then "peek" into the file using the head command. For example, I would type the following:
+```
+cd /Users/kateguion/Desktop
+head coad_clinical_data.csv
+```
+
+Next time you want to read in the clinical file you can do the following:
+```{r}
+clinic_read_in <- read.csv("file_path/file_name.csv", row.names = 1)
+```
+
