@@ -1,0 +1,567 @@
+---
+title: "A First Guide to Programming in R"
+author: "David Wen"
+date: "08/09/2021"
+output:
+  html_document:
+    df_print: paged
+    toc: true
+    toc_depth: 2
+    toc_float: true
+
+---
+
+```{r setup, include=FALSE}
+# ignore all of this
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(0)
+rand_nums = runif(10, min = 0, max = 10)
+
+if(!require(pacman)){
+  install.packages(pacman)
+  library(pacman)
+}
+
+p_load(rbenchmark)
+p_load(tidyverse)
+
+theme_set(
+  theme_bw() +
+    theme(legend.position = "top")
+  )
+```
+
+\tableofcontents
+\newpage
+
+This is a quick-start guide to coding in `R`! If you've used `R` before, this guide probably isn't going to be too helpful. In any case, please scroll through the sections and read what's new or interesting to you! 
+
+# The Basics
+This is a short guide to learning how to code in `R`! If you are already familiar with coding, feel free to skip this section, as it will just cover the basics. Otherwise, read on!
+
+## Variables
+A **variable** stores some kind of data within your program. A variable takes one of many types of data; in `R`, you don't have to specify the type. The most relevant data types (most of which are applicable to other languages) are:
+
+* `NULL/NA`: an undefined or "nothing" value.
+* `bool`: a true or false value. `bool` stands for Boolean values, which in many languages encodes `1` to mean true and `0` to mean false. For example, `1 < 2` would yield a `true` value, since 1 is less than 2.
+* `numeric` or `double`: some kind of number. Note that in `R`, `numeric` is a catch-all, while in other languages there is a clear distinction/incompatibility between`int`s (integer values, e.g. `3`) and `float`s (floating point/decimal values, e.g. `1.5`). 
+* `string`: a text value. These are defined using single OR double quotes, for example `'QBIO'` and `"quantitative biology"`. It's a matter of preference; I mostly use double quotes out of habit (C++).
+* `list`: some kind of ordered values. for example `[[1, 2.0, "three"]]`. As you can see, you can mix and match data types in `R`.
+* `data.frame` and `matrix`: essentially 2D lists or tables.
+* `factors`: these are categorical variables in `R` (see the stats section for more info if this isn't familiar). You'll need to specify if a variable is a `factor` for some purposes.
+
+You can declare a variable in `R` in one of two equivalent ways (except in some edge cases you don't really have to worry about).
+```{r declare_variables}
+var_string = "red"
+var_num <- 3
+var_vector = c(1, 2, 3) # a vector -- see more later
+var_list = list(var_string, var_vector, 82)  # a list can have basically anything in it
+```
+
+If you run the code (by opening the `.Rmd` file and clicking the green triangle in the code block, or copy-pasting it into a new `R notebook` file), you'll see these two new variables in your `RStudio` environment (top-right panel by default) containing the two strings.
+
+### A Note on Naming Variables
+There is no convention on how to format your variable names, but the most important rule is to keep them just descriptive enough to describe the information contained. For example, these are examples of acceptable ways to name a variable (from best to fine):
+
+```
+sum_of_ages = sum(ages)  # very clear
+sumOfAges = sum(ages)  # different formatting, but just as good
+AgeSum = sum(age)  # also good, though sometimes frowned upon to capitalize the first letter
+sum.age = sum(age)  # fine in R to use periods in a name, not good in other languages
+                    # also, R functions tend to use periods, so this can cause confusion
+```
+
+Here's some bad ways:
+```
+sum = sum(ages)  # avoid naming variables after functions, unclear what the sum is
+s = sum(ages)  # not descriptive, very unclear
+sumofages = sum(ages)  # hard to read
+SUMOFAGES = sum(ages)  # reserve caps for very important constants in your code
+blargh = sum(ages)  # funny but bad
+```
+
+As you can see, there's a million ways to name a variable. Don't worry about it too much: keep things descriptive and concise, but I would err on the side of descriptive. Just be consistent and make sure things are readable.
+
+**Exercise.** In the following code box, create two new variables named `age` and `birthday`, containing your age and your birthday in a `MM/DD/YYYY` format, respectively. What data types are these? When you're done, run the code to make sure you've declared your variables correctly.
+```{r exercise_variables}
+x = 3
+age = 18
+birthday = "11/02/2002"
+
+```
+
+
+## Functions
+**Functions**, on a very basic level, perform repeatable actions on the `parameters` passed to them. Functions have three important components:
+# *Name*.
+# *Parameters*. A function can have number of parameters (including 0), depending on how it's defined.
+# *Return value*. It's return value is what it outputs. In `R`, you can return either no values or one value.
+
+To call a function, use the syntax `funcname(arg1, arg2, etc.)`. You've seen functions before in math class, like $\sin(\pi)$ -- the input is $\pi$, the name is $\sin$, and the output is whatever the $\sin$ value is (`0` in this case). You've also seen functions with multiple parameters before like addition, `x + y`: the function name is `+`, the two parameters are `x` and `y`, and the return value is whatever `x + y` is -- you just substitute the values in. In `R`, you can add two numbers as follows (note that programming languages implement `+`; this is just a contrived example to show the syntax):
+
+```{r intro_function}
+x = 5
+y = 7
+sum(x, y)
+
+x + y  # this is the same
+```
+
+You can also save a function's output (its return value) to a variable. For example, if I wanted save those numbers, I could do the following:
+
+```{r save_func_output}
+z = sum(x, y)
+z
+```
+
+**Exercise.** Use the `max` and `min` functions to find the largest value of `rand_nums`, which is a secret list of 10 numbers, then store those two values in two different variable. Then find the product of the max and min, save it to another variable, and print it using the `print` function (note that both `max`, `min`, and `print` can all take in one parameter). You should see `19.05239`.
+
+```{r exercise_more_functions}
+list_of_numbers = c(1, 3, 4, 8, 1, 44, -3)
+MIN = min(list_of_numbers)
+MAX = max(list_of_numbers)
+MIN
+MAX
+```
+
+### Writing Functions
+Writing functions is extremely important, as it makes code more concise, easier to read, and more reusable. The way you write a function in `R` is as follows:
+```
+function_name = function(arguments){
+  code goes here
+  
+  return something
+}
+```
+
+To dissect the syntax: you define a function using the `function` keyword, and you put all keywords within the parentheses. Since functions often have more than one line, you use curly braces (\{ \}) to define its contents. Finally, at the end of the function, you *may* have a `return` statement, which is essentially its output. Again, not all functions have a `return` statement. For example, if I needed graph a bunch of different parabolas a lot of times, I could write the following function (remember that $y = ax^2 + bx + c$. Also, you don't need to understand this code):
+
+```{r}
+graph_parabola = function(a, b, c){
+  curve(a*x^2 + b*x + c, xlim = c(-5, 5), ylim = c(-5, 5), col = "blue")
+  # there is no return statement -- the output is in the plot window!
+}
+
+graph_parabola(1, 4, 3) # much easier than typing the above code!
+```
+
+
+**Exercise.** Write a function called `quad_form` that accepts three paramters (`a, b, c`) and returns one solution of the quadratic formula (remember: $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$).
+
+```{r exercise_write_func}
+quad_form = function(a, b, c){
+  sqrt()
+}
+
+```
+
+
+## Logic and Control Flow
+Now that we know how to store data and manipulate it with functions, how do you decide when to call functions? **Control flow** allows you to determine which chunk of code to run under which situations.
+
+Logical statements evaluate either to `TRUE` or `FALSE` (they are `bool`s). In general, you will use comparison operators Here are a list of the most commonly-used ones:
+
+Operator | Explanation
+-------- | ------------
+`==`     | Equals to (e.g. `"red" == "red"` is `TRUE`; `"1" == "2"` is `FALSE`)
+`!=`     | Not equals to
+`<`      | Less than
+`>`      | Greater than
+`<=`     | Less than or equal to
+`>=`     | Greater than or equal to
+`%in%`   | In a list (e.g. `2 %in% [[1, 2, 3]]` is `TRUE`)
+
+All of these except the last (`%in%`) are universal to most other programming languages, so be sure to understand them!
+
+You can also perform more operators on these `bool` comparisons. There are three main operations: `and`, `or`, and `not`:
+
+Operator | Explanation
+-------- | ------------
+`&&`     | And: `TRUE` if both left and right are `TRUE`
+`||`     | Or: `TRUE` if either left or right are `TRUE`
+`!`      | Not: flips `TRUE` to `FALSE`, and vice versa.
+
+(note: in `R`, if you use `&&` and `||` on a vector, you will only evaluate the first value, rather than getting an entire vector. If you want a vectorized logical operator, use `&` and `|` --- see the section on vectors for more information.)
+
+-----------
+
+The `if` keyword is the main keyword that you will use. If the statement within the `if` code block (i.e. the part within the curly braces) is `TRUE`, then it will run. Can you predict the output of the following code block?
+```{r control_flow_q, eval=F}
+print("Green eggs and ham.")
+
+if(1 > 2 || "red" == "blue"){
+  print("I do not like green eggs and ham.")
+}
+
+if("red" == "green" || 2 > 1){
+  print("I do not like them, Sam-I-Am.")
+}
+
+if(!(3 != 3 || "pass" == "fail")){
+  print("I do so like green eggs and ham.")
+}
+
+```
+
+<details>
+<summary> Show solution </summary>
+```{r control_flow_q_sol, echo=F}
+print("Green eggs and ham.")
+
+if(1 > 2 || "red" == "blue"){
+  print("I do not like green eggs and ham.")
+}
+
+if("red" == "green" || 2 > 1){
+  print("I do not like them, Sam-I-Am.")
+}
+
+if(!(3 != 3 || "pass" == "fail")){
+  print("I do so like green eggs and ham.")
+}
+```
+</details>
+<br>
+
+
+The `else` and `else if` keywords go with the `if` keyword. They are somewhat self-explanatory: if the `if` statement is `TRUE`, do what is in the `if` block; otherwise, do what is in the `else` block. The `else if` keyword is related to the `else` keyword, in that it will happen if the `if` statement is false AND the `else if` statement is true. Here is an example:
+```{r control_flow_2}
+if (1 > 2){
+  print("The if statement is true.")
+} else if(2 > 1){
+  print("The else if statement is true.")
+} else{
+  print("Neither the if NOR the else if is true.")
+}
+```
+
+As you can see, these statements are evaluated in order: first, check the `if`. Since that was `FALSE`, we move onto the next statement. We check the `else if` statement, which is `TRUE`. Therefore, we don't check the `else` block. The important thing to note is that when you have an if/else if/else block, *only one* of the blocks can execute. Another thing to keep in mind is that you can have any number of `else if` statements (including 0), and you can have either 0 or 1 `else` blocks. All of the following constructions are valid:
+
+* if
+* if/else
+* if/else if
+* if/else if/else if (etc.)
+* if/else if/else if (etc.)/else
+
+Note that if you want to use `else if` or `else`, you MUST have one corresponding `if` statement.
+
+## Loops
+Sometimes, we want to do something many times, or we want to do the same operations on a large number of things. Luckily, we have two main ways to loop: `for` and `while` loops.^[NOTE: in `R`, you want to avoid using loops. We'll discuss ways to get around them in the next section.]
+
+### For Loops
+`for` loops (in `R`) do something *for* each element in some list. As a example, the following code block multiplies each integer between 1 and 10 (generated by `1:10`) by 10. In more detail, `i` takes on the value `1`, and `1*10` is printed (i.e. outputted to the console), then `i` takes on the value `2`, and `2*10` is printed, until the last value is reached. By convention, you use `i` as the "dummy" counting variable (standing for index). If you have nested `for` loops (i.e. a loop inside your loop -- yes that is possible), you'll commonly see `j` in the second level and `k` in the third, etc.
+
+```{r for_loops}
+for (i in 1:10){
+  print(i*10)
+}
+```
+
+`for` loops are the standard technique for doing something a set number of times. For example, the following code block prints USC 5 times (note that you don't do anything with the numbers):
+```{r for_loops_2}
+for (i in 1:5){
+  print("USC")
+}
+```
+
+**Exercise.** Print out 10, 9, 8, ..., 1 in descending order. Can you think of more than one way to do it?
+```{r exercise_print_descending}
+# code goes here
+```
+
+**Exercise.** Nested for loops: print out all the possible sums from rolling two dice (i.e. 1+1, 1+2, etc.). You should see 36 values.
+
+```{r exercise_nested_For}
+# code goes here
+```
+
+
+### While Loops
+On the other hand, `while` loops look a lot like `if` statements. Instead of just executing something once, `while` loops will continue executing the code block until the condition is `FALSE`. Compare the two following blocks of code. In the first, you multiply once; in the second, you multiply until the condition in the `while` loop is `FALSE`.
+
+```{r if_v_while}
+i = 1
+if(i < 2^8){
+  i = i*2
+  print(i)  # only happens once
+}
+```
+
+```{r while_loop_1}
+i = 1
+while(i < 256){
+  i = i * 2
+  print(i)  # happens until i = 256
+}
+```
+
+**Exercise.** Add random numbers to `x` until `x` is greater than 10, printing `x` after every addition. Use the function `runif(1)` to generate one random number at a time.
+```{r exercise_while}
+x = 0
+# code goes here
+```
+<details>
+<summary> Expected Output </summary>
+```
+## [1] 0.06178627
+## [1] 0.2677608
+## [1] 0.4443176
+## [1] 1.13134
+## [1] 1.515444
+## [1] 2.285286
+## [1] 2.782985
+## [1] 3.500603
+## [1] 4.492509
+## [1] 4.872545
+## [1] 5.64999
+## [1] 6.584695
+## [1] 6.796838
+## [1] 7.448511
+## [1] 7.574066
+## [1] 7.841287
+## [1] 8.227401
+## [1] 8.240792
+## [1] 8.623179
+## [1] 9.49287
+## [1] 9.833219
+## [1] 10.3153
+```
+</details>
+
+### An Alternative to Loops in `R`
+
+`R` has alternatives to using `for` loops; namely, there is a family of `apply` functions that, well, apply a function across a `vector`. These have the advantage of returning a `vector`. There's four functions you'll probably use:
+
+* `apply`: this works over a matrix. It's mostly used if you want to apply a function over rows, rather than columns (it accepts an additional argument, `MARGIN`).
+* `lapply`: this returns a list (i.e. list-apply).
+* `sapply`: this returns a vector or matrix, determined automatically (i.e. simple-apply). I personally prefer this one.
+* `mapply`: this goes across two or more iterable objects at the same time. The syntax is slightly different, with `mapply(FUNC, X, Y, Z, ...)`, where `X`, `Y`, `Z`, are the iterable objects.
+
+These functions use the following basic syntax (again, with the exception of `mapply`):
+```
+apply(X, function(x))
+```
+where `X` is some kind of vector/list/dataframe, and `function` is some function. The `x` passed to the function is a stand-in for the values that are being iterated over by the `apply` function. Note that you can define your own function as part of the apply function. For example, if you had a data frame and wanted to get both the mean and variance of each column and put 0s for categorical variables, you can do the following (on the `iris` data set):
+```{r apply}
+vals1 = sapply(iris, function(x){  # you can define your own function here!
+  if (is.numeric(x)){
+    return(c(mean(x), var(x)))
+  } else{
+    return(c(0, 0))
+  }
+})
+
+vals1
+
+##### for loop version:
+vals2 = matrix(nrow = 2, ncol = 5, dimnames = list(NULL, names(iris)))
+
+for(i in 1:ncol(iris)){
+  x = iris[, i]
+  if (is.numeric(x)){
+    vals2[, i] = c(mean(x), var(x))
+  } else{
+    vals2[, i] = c(0, 0)
+  }
+}
+
+vals2  # equivalent to vals1
+```
+
+Syntactically, it's considered superior in `R` to do the first version, as it's easier to read, doesn't involve declaring extra variables ahead of time (that matrix line looks real ugly), and overall is more flexible. Practically, you'll probably see the for loop version more, as most people who use `R` come from another language, and the for loop syntax is more familiar (the run time isn't much different in any case). Use whichever syntax you prefer, but it's good to be able to understand code that other people wrote.
+
+**Exercise.** Given the following $10 \times 10$ matrix, calculate the mean across each row and for each column and store as two separate numeric vectors without using a for loop.
+```{r exercise_apply, eval=F}
+set.seed(131)  # this is to ensure reproducibility
+mean_mat = matrix(1:100, nrow = 10, ncol = 10)  # data frame of values
+
+### code goes here
+```
+
+## Further Practice
+These concepts should be enough to get you through the first few activities, but if you want more practice check out the `swirl` package! It has a bunch of activities to help you learn. Also, look online -- there's a million tutorials floating around. Finally, the best way to practice (in my opinion) is just to get your hands dirty with actually doing some analysis.
+
+\newpage 
+# R-Specific Syntax
+`R` as a programming language is kind of weird, in that there's a lot of syntax specific to the language to learn. Here's an overview of the most important concepts.
+
+## Getting Help
+This sounds weird as the first section, but if you ever wonder what a package or a function does, type `?` before its name (or equivalently, call the `help` function). For example, let's say I'm not sure what the function `ifelse` does. Let's take a look!
+
+```{r qmark}
+?ifelse
+# same effect: help(ifelse)
+```
+
+If you run that line of code, you should see help topics on `ifelse` pop up in the help window! It turns out the `ifelse` function is a vectorized logical operator (more on that later). `R` documentation tends to be very comprehensive, so always use the question mark!
+
+Another helpful command is `args`, which tells you the arguments a function takes if you ever forget. For example, let's say I wanted to see what order I need to put my parameters for `ifelse`. Just do the following:
+```{r args}
+args(ifelse)
+```
+This tells you very quickly that you need to put your logical operator first, then its output is its `TRUE`, then if its `FALSE`. You can get the same information by using the `?`, but this method is faster if you just want to check the arguments.
+
+Finally, if you run into any errors, you have any further questions, or if you're not sure how to do something, Google is your friend!
+
+
+## Setting Up the Working Environment
+When you first open a document, you want to make sure that your working directory is set properly. That is, when you start reading files into your programs and writing outputs, you want to know which file you're currently in. To figure out where you are, simply type `getwd()` into the console (this is equivalent to `pwd` in Unix). To set your directory, type `setwd(DIRECTORY)` (this is equivalent to `cd`). If you want to see the files in the current directory, type `list.files()` (this is equivalent to `ls`).
+
+## Installing Packages
+Luckily, installing and using packages is very simple. Say you want to install and use the package `tidyverse` (it has a lot of useful functions for data analysis; check them out yourself). Just include the following lines at the top of your script:
+
+```{r install_packages}
+if(!require(tidyverse)){
+  install.packages("tidyverse")
+}
+
+library(tidyverse)
+```
+
+
+The `if` statement just checks if you need to install the package, and `library` loads it into your session of `R`. You only need to install a package once, BUT you must load it into your `R` environment every time using `library`.
+
+**Side note**: if you don't like this syntax, install and load the `pacman` package and just use the `p_load` function (you'll see me use this in scripts, cuz I'm lazy):
+```{r pacman}
+library(pacman)  # you need to do this first
+
+# this installs the package for you if you don't have it already
+# and loads it into your workspace with library
+p_load(tidyverse)
+
+```
+
+## Managing Data Tables
+Data tables are two-dimensional representations of data. Here is an example of a data table in `R` (`mtcars` is a built-in data set in `R`; `head` shows the first few rows of it):
+
+```{r dataframes_head}
+head(mtcars)
+
+# glimpse is my preferred way to look at the data
+# you'll need to have tidyverse loaded though
+
+glimpse(mtcars)
+```
+
+To access a column by name, you would use the `$` operator. If you want to access by index, you use the square bracket ([ ]) syntax. `R` accesses values by [row, column]. Note that the square bracket syntax is fairly standard across programming languages to access elements in a list or table.
+```{r dataframes_cols}
+# dollar sign version
+mtcars$mpg
+
+# square bracket version
+mtcars[, 1]
+```
+
+You can also access specific elements using square brackets, for example ``mtcars[3, 4] ``. *Note that `R` is 1-indexed*, unlike most languages you are probably familiar with, so the first element is located at (1, 1) and NOT (0, 0).
+
+`R` also allows you to select multiple rows and/or columns. You can generate a range of integers using a colon (`:`), which returns a integer vector (see the next section). Likewise, you can write your own vector:
+
+```{r}
+mtcars[, 1:3]  # equivalent to mtcars[, c(1,2,3)], the first 3 columns
+mtcars[c(2, 6), 4]  # gets the 4th element of rows 2 and 6
+mtcars[10:12, c(2, 4, 5)]  # gets the 2nd, 4th, and 5th elements of rows 10, 11, 12
+```
+
+Other useful methods to call on a data table are `rownames()` and `colnames()`, which gives you the row names and column names, respectively. There are many more, but I can't type them all out unfortunately. Luckily, Google has all the answers!
+
+## Vectors
+Vectors are data structures that are relatively unique to `R`, and because of this they are often very tricky, but it is *extremely* helpful to know how to use them well. Vectors are basically lists, except the contents all have to be the same data type (string, numeric, etc). You declare a `vector` using the `c()` syntax:
+
+```{r vector_1}
+prime_vector = c(2, 3, 5, 7, 11)
+prime_vector
+
+char_vector = c("QBIO105", "QBIO401")
+char_vector
+```
+
+As is standard in most programming languages, you can access the element at an index with square brackets, with the same syntax rules with selection as with data frames (again, note the 1-indexing):
+```{r vector_2}
+prime_vector[1]
+```
+
+`R` has a *lot* of built-in functions that can be called on vectors (so-called *vectorized functions*), and they run **much** faster than coding a for loop. To illustrate the difference, let's compare two ways to add every element in a vector:
+
+```{r vector_benchmark, message=F}
+big_vector = 1:10^6
+
+for_loop_sum = function(vector){
+  x = 0
+  for (i in vector){
+    x = x + i
+  }
+  return(x)
+}
+
+print(benchmark(
+        vectorized = sum(big_vector),
+        forloop = for_loop_sum(big_vector), 
+        replications = 100))
+
+
+# make sure the code is doing the same thing
+sum(big_vector) == for_loop_sum(big_vector)
+
+```
+As you can see, the first method (using the built-in, vectorized `sum` function) runs basically instantly, whereas it takes a few seconds to run the for loop in the second method to get the same result (some $2000$ times slower). The takeaway is to try to use `R`'s functions over writing your own for loops, since with big data sets it will save a lot of time. Unfortunately, that comes with the burden of remembering the names of the functions.
+
+**Exercise.** Write a function that given a vector of numeric values, make a new vector of the same length, where even values are replaced with the string `"EVEN"`, and odd values are replaced with the strong "`ODD`". For example, passing `prime_vector` as a parameter should return `c("EVEN", "ODD", "ODD", "ODD", "ODD")`. Hint: use the `ifelse()` function and the modular division operator `%%`, which basically calculates the remainder (e.g. `23 %% 5` is `3`).
+```{r exercise_vectors}
+# code goes here
+```
+
+## Reading and Writing Files
+Often, you want to read in data from a spreadsheet file and to write tables to new files (most programming languages can do this). To read tables, use the `read.table()` function. To write a data frame, use `write.table()`. If you want more information about them, type `?read.table` and/or `args(read.table)` into the `R` console! (This advice applies to all `R` functions). The most important arguments for `read.table` are:
+
+* `file`.
+* `header`: you want to tell `R` if the first row is a header row with column names or not.
+* `sep`: this tells `R` what separates columns. For example, in a `csv` (comma-separated values), you want to type `read.table(file.csv, sep=",")`, while for a `tsv` (tab-separated values), you should use `read.table(file.csv, sep="\t")`.
+
+NB: if you're too lazy to do this, install and load the package `data.table`, and use the functions `fread` (fast read ), which automatically detects the separator and just runs faster. You probably also want to put the line `options(datatable.fread.datatable=FALSE)` right after you load the package, which universally sets the `data.table` parameter to `FALSE`, as `data.table`s work differently from a `data.frame`. (Otherwise, you'll probably get confused when you try to do stuff.)
+
+
+\newpage
+# Plotting Data
+Plotting data is one of the most powerful `R` can do, and it's an extremely important skill to have because visualizing data is fast and gives you an immediate idea of what you're looking at. You have two main choices with regards to plotting: the base functions or using the package `ggplot2`, which I prefer because it's more powerful and it's prettier. I'll go over both, using examples from the `mtcars` data set.
+
+-----
+First, let's see what's in the `mtcars` dataset.
+```{r mtcars_explore}
+?mtcars
+```
+Let's say you really wanted to figure out if there's a relationship between miles per gallon (mpg) and horsepower (hp). You can quickly visualize this by looking at a scatter plot, with one variable on each axis:
+
+```{r scatter_1}
+# note: the following code runs more or less equivalently, 
+# and saves you from doing the whole dollar sign column accession thing
+
+# with(mtcars, plot(mpg, hp))
+
+plot(mtcars$mpg, mtcars$hp)
+```
+
+We want easily see that there's a negative correlation between horsepower and miles per gallon. However, if you wanted to present this data, you want to make the plot a little more descriptive. You can set the axis labels and title like so:
+
+```{r scatter_2}
+plot(mtcars$mpg, mtcars$hp, main = "Cars Horsepower vs. MPG", xlab = "Miles Per Gallon", ylab = "Horsepower")
+```
+
+Using `ggplot2` is a little different (it's included as part of `tidyverse`, so if you load that package `ggplot2` is also included). The gist of the package is that you have one plot object, to which you add things to. Here's how you would plot the data:
+```{r ggplot_scatter}
+ggplot(data = mtcars) + # tell ggplot what data you want to plot -- this is the "plot" object
+  geom_point(aes(x = mpg, y = hp, color = factor(vs))) + # add the points (scatter plot)
+  labs(title = "Cars Horsepower vs. MPG", x = "Miles Per Gallon", y = "Horsepower", color = "Engine Shape") # label the axes
+```
+
+The syntax is a little more confusing (you'll probably have to do a lot of Googling), but let's break it down. The first line makes a plot object that plots a single data frame. The next line tells `ggplot` to plot points (a scatter plot). Within it, you have to specify variables with the `aes` function (there's a million options and they depend on your plot, but `x`, `y`, and `color` are probably the most used). Then I specify the labels in the `labs` function. Note that everything is connected with `+`, which is why you should think of `ggplot` being a single plot object that you *add* functionality/options to.
+
+Again, it's up to you which plotting package you prefer, but note that publications generally use `ggplot2` so it's a good skill to have. Also, in both cases, there's a bunch more options like setting colors, but the documentation/Google covers these topics a lot better than I can.
+
+I just went over scatter plots to introduce you to the basic plotting syntax in `R`, but there's many many types of plots out there to visualize different types of data. Go explore some of the ones below!
+
+* boxplots
+* histograms
+* bar plots
+* density plots
+
+See the next tutorial for a lot more hands-on experience!
