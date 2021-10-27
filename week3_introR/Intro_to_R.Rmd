@@ -86,8 +86,9 @@ As you can see, there's a million ways to name a variable. Don't worry about it 
 ```{r exercise_variables}
 x = 3
 age = 18
-birthday = "11/02/2002"
-
+birthday = noquote("11/02/2002")
+print(age)
+print(birthday)
 ```
 
 
@@ -100,9 +101,10 @@ birthday = "11/02/2002"
 To call a function, use the syntax `funcname(arg1, arg2, etc.)`. You've seen functions before in math class, like $\sin(\pi)$ -- the input is $\pi$, the name is $\sin$, and the output is whatever the $\sin$ value is (`0` in this case). You've also seen functions with multiple parameters before like addition, `x + y`: the function name is `+`, the two parameters are `x` and `y`, and the return value is whatever `x + y` is -- you just substitute the values in. In `R`, you can add two numbers as follows (note that programming languages implement `+`; this is just a contrived example to show the syntax):
 
 ```{r intro_function}
-x = 5
-y = 7
+x = 15
+y = 70
 sum(x, y)
+print(sum)
 
 x + y  # this is the same
 ```
@@ -112,16 +114,17 @@ You can also save a function's output (its return value) to a variable. For exam
 ```{r save_func_output}
 z = sum(x, y)
 z
+print(z)
 ```
 
 **Exercise.** Use the `max` and `min` functions to find the largest value of `rand_nums`, which is a secret list of 10 numbers, then store those two values in two different variable. Then find the product of the max and min, save it to another variable, and print it using the `print` function (note that both `max`, `min`, and `print` can all take in one parameter). You should see `19.05239`.
 
 ```{r exercise_more_functions}
-list_of_numbers = c(1, 3, 4, 8, 1, 44, -3)
-MIN = min(list_of_numbers)
-MAX = max(list_of_numbers)
-MIN
-MAX
+rand_nums = c(1, 3, 4, 8, 1, 44, -3)
+MIN = min(rand_nums)
+MAX = max(rand_nums)
+product = MIN * MAX
+cat("product:", product)
 ```
 
 ### Writing Functions
@@ -150,8 +153,11 @@ graph_parabola(1, 4, 3) # much easier than typing the above code!
 
 ```{r exercise_write_func}
 quad_form = function(a, b, c){
-  sqrt()
+  var_x = (-b + sqrt((b*b) - (4*a*c)))/(2*a)
+  return (var_x)
 }
+
+print(quad_form(3,10,1))
 
 ```
 
@@ -267,12 +273,28 @@ for (i in 1:5){
 **Exercise.** Print out 10, 9, 8, ..., 1 in descending order. Can you think of more than one way to do it?
 ```{r exercise_print_descending}
 # code goes here
+for (i in 10:1) {
+  print(i)
+}
+
+for (i in 0:9) {
+  print(10 -i)
+}
+
 ```
 
 **Exercise.** Nested for loops: print out all the possible sums from rolling two dice (i.e. 1+1, 1+2, etc.). You should see 36 values.
 
 ```{r exercise_nested_For}
 # code goes here
+count = 0
+for (i in 1:6) {
+  for (j in 1:6) {
+    sum= i + j
+    count = count + 1
+    cat("count:", count, "sum", sum)
+  }
+}
 ```
 
 
@@ -298,7 +320,11 @@ while(i < 256){
 **Exercise.** Add random numbers to `x` until `x` is greater than 10, printing `x` after every addition. Use the function `runif(1)` to generate one random number at a time.
 ```{r exercise_while}
 x = 0
-# code goes here
+while (x > 10) {
+  x = x + runif(1)
+  print(x)
+}
+
 ```
 <details>
 <summary> Expected Output </summary>
@@ -343,10 +369,12 @@ apply(X, function(x))
 ```
 where `X` is some kind of vector/list/dataframe, and `function` is some function. The `x` passed to the function is a stand-in for the values that are being iterated over by the `apply` function. Note that you can define your own function as part of the apply function. For example, if you had a data frame and wanted to get both the mean and variance of each column and put 0s for categorical variables, you can do the following (on the `iris` data set):
 ```{r apply}
-vals1 = sapply(iris, function(x){  # you can define your own function here!
+
+vals1 = sapply(iris, functionname(x){  # you can define your own function here!
   if (is.numeric(x)){
     return(c(mean(x), var(x)))
-  } else{
+  } 
+  else  {
     return(c(0, 0))
   }
 })
@@ -376,6 +404,7 @@ set.seed(131)  # this is to ensure reproducibility
 mean_mat = matrix(1:100, nrow = 10, ncol = 10)  # data frame of values
 
 ### code goes here
+
 ```
 
 ## Further Practice

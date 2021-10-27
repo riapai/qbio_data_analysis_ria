@@ -34,8 +34,9 @@ The previous lines looked for the data on the internet via GDCquery, and then do
 Use the `str()` and `head()` functions to look at the clinic data. Each cancer type will have different clinical variables available.
 ```{r}
 
-str(clinic)
-head( "fill in here" )
+#str(clinic)
+head( clinic$family_history_of_stomach_cancer)
+colnames(clinic)
 ```
 
 Check for understanding: What is the difference between str() and head()?
@@ -44,7 +45,7 @@ Check for understanding: What is the difference between str() and head()?
 Use the function `colnames()` to look at the column available in the clinic dataframe. Each of the column names here was also listed with a `$` when the str() function was used. Access a specific column via the `$`.
 ```{r}
 #colnames(clinic)
-clinic$days_to_birth
+str(clinic$days_to_birth)
 #print(head(clinic$year_of_initial_pathologic_diagnosis)) #choose another column to look at. 
 
 #print(clinic$vital_status[1:5]) #this shows the vital_status column for the first 5 patients
@@ -72,7 +73,7 @@ unique( clinic$race_list ) #This shows you all the UNIQUE entries of the race co
 
 #the mar argument in par() sets the plot margins. As the race names may be long, we want to have a large bottom margin. par(mar = c(bottom, left, top, right)). How does the plot change if you change these margins?
 par(mar=c(5,1,1,1))
-boxplot( clinic$age_at_initial_pathologic_diagnosis ~ clinic$race_list, xlab = "age", ylab = "race", main = "age and race of patients with stomach cancer", las = 2, cex.axis = 0.5)
+boxplot( clinic$age_at_initial_pathologic_diagnosis ~ clinic$vital_status, xlab = "Age at initial diagnosis", ylab = "Vital Status", main = "Age of initial diagnosis vs. Vital Status", las = 2, cex.axis = 0.5)
 ```
 If you notice a missing x axis label, some of your patients may be missing race information. 
 Check this via booleans.
@@ -109,7 +110,7 @@ Now we are going to focus on age.
 ```{r}
 
 
-lapply(clinic, min(clinic$age_at_initial_pathologic_diagnosis))
+min(clinic$age_at_initial_pathologic_diagnosis)
 
 
 
