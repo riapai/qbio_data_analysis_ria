@@ -72,8 +72,16 @@ Use `colnames()` to find the column name for race.
 unique( clinic$race_list ) #This shows you all the UNIQUE entries of the race column
 
 #the mar argument in par() sets the plot margins. As the race names may be long, we want to have a large bottom margin. par(mar = c(bottom, left, top, right)). How does the plot change if you change these margins?
-par(mar=c(5,1,1,1))
-boxplot( clinic$age_at_initial_pathologic_diagnosis ~ clinic$vital_status, xlab = "Age at initial diagnosis", ylab = "Vital Status", main = "Age of initial diagnosis vs. Vital Status", las = 2, cex.axis = 0.5)
+par(mar=c(5,5,5,5))
+boxplot( clinic$age_at_initial_pathologic_diagnosis ~ clinic$vital_status, xlab = "Vital Status (Alive or Dead)", ylab = "Age of initial diagnosis (years)", main = "Age of initial diagnosis vs. Vital Status", las = 2, cex.axis = 0.5)
+
+
+
+
+
+
+
+
 ```
 If you notice a missing x axis label, some of your patients may be missing race information. 
 Check this via booleans.
@@ -87,7 +95,7 @@ isMissingRace = function(x) {
   }
 }
 
-lapply(race, isMissingRace(race))
+#lapply(race, isMissingRace(race))
 
 
 
@@ -101,6 +109,8 @@ sum( as.numeric( clinic$race_list == " "  )  )
 #Remember, the != refers to NOT EQUAL. How many patients HAVE race information? Hint, these patients have race information that does not equal to ""
 
 
+
+
 ```
 
 Now we are going to focus on age. 
@@ -109,8 +119,10 @@ Now we are going to focus on age.
 3. Use the `mean()` function to determine the mean age
 ```{r}
 
-
-min(clinic$age_at_initial_pathologic_diagnosis)
+table(clinic$vital_status)
+table(clinic$age_at_initial_pathologic_diagnosis)
+install.packages("janitor")
+library(janitor)
 
 
 
@@ -123,6 +135,8 @@ How many young and old patients are there?
 ```{r}
 num_young <- sum( clinic$age_at_initial_pathologic_diagnosis < 50 )
 num_old <- sum( clinic$age_at_initial_pathologic_diagnosis >= 50  ) #Remember that the >= is GREATER THAN OR EQUAL TO
+
+
 ```
 
 What if I want to know the patient id's of young and old patients?
@@ -140,6 +154,7 @@ We can also use an ifelse to add a new column! The `ifelse()` function operates:
 ```{r}
 clinic$age_category <- ifelse( clinic$age_at_initial_pathologic_diagnosis < 50, "Young", "Old" )
 head( clinic$age_category )
+sum( as.numeric( clinic$age_category == "Young" ) )
 
 #Do some sanity checks!
 
@@ -151,10 +166,9 @@ num_old == sum(bool_young) #sanity check
 What if I want all the clinical information of just young patients? First we need to remember how the dataframe is laid out with `dataframe[row, col]` format. 
 Before you run the following lines, try to guess the output!
 ```{r}
-clinic[1,1] #This is the top left entry of the dataframe. R has "one-based indexing"
-clinic[1,5]
-clinic[2,7]
-clinic[,3]
+#clinic[1,1] #This is the top left entry of the dataframe. R has "one-based indexing"
+clinic[2,19]
+
 ```
 
 Check your understanding: What is the significance of the comma and leaving a blank before or after?
@@ -166,6 +180,7 @@ Hint: Is the age_category a row or column? Draw it out!
 ```{r}
 young_clinic <- clinic[ clinic$age_category == "Young", ] #Add the comma!
 old_clinic <- clinic[clinic$age_category =="Old",]
+
 ```
 
 Check your understanding of the previous steps: Try to create the young_clinic in ONE LINE using the original age column, not the age_category
@@ -196,7 +211,8 @@ library(survminer)
 
 Use an `ifelse()` statement. If `clinic$days_to_death` is not available (NA), then survival will be defined as days_to_last_follow_up. Else, survival will be the clinic$days_to_death
 ```{r}
-clinic$survival_time <- ifelse( is.na(clinic$days_to_death), days_to_last_follow_up, clinic$days_to_death )
+clinic$survival_time <- ifelse( is.na(clinic$days_to_death), clinic$days_to_last_follow_up, clinic$days_to_death )
+summary(clinic$survival_time)
 ```
 
 4. Now we need to know which patients died and which are still alive. Use the vital_status column to determine this. If they are alive, a death event did NOT occur and they will be coded a 0. Otherwise, a death event did occur which will be coded as a 1.
@@ -208,12 +224,27 @@ clinic$death_event <- ifelse(clinic$vital_status == "alive" , 0, 1 )
 
 5. Complete a survival analysis by race
 ```{r}
+age_clinical = clinic$age_at_initial_pathologic_diagnosis
+clinic$age_category = ifelse(age_clinical < 40, "Young", ifelse(age_clinical >= 60, "Old", "Mid"))
 
-surv_object <- Surv( time = clinic$survival_time, event = clinic$death_event )
-race_fit <- surv_fit( surv_object ~ clinic$race_list, data = clinic)
+surv_object = survival::Surv(time = clinic$survival_time, event = clinic$death_event)
+
+age_fit = survminer::surv_fit(surv_object ~ clinic$age_category, data = clinic)
+
+ggsurvplot( age_fit, pval=TRUE, ggtheme = theme(plot.margin = unit( c(1,1,1,1), "cm") ), legend = "right"   )
+
+
+
+
+
+
+
+
+#surv_object <- Surv( time = clinic$survival_time, event = clinic$death_event )
+#race_fit <- surv_fit( surv_object ~ clinic$race_list, data = clinic)
 
 #the ggtheme and legend arguments are for formatting. Feel free to play around with the margins and legend placement
-ggsurvplot( race_fit, pval=TRUE, ggtheme = theme(plot.margin = unit( c(1,1,1,1), "cm") ), legend = "right"   )
+#ggsurvplot( race_fit, pval=TRUE, ggtheme = theme(plot.margin = unit( c(1,1,1,1), "cm") ), legend = "right"   )
 ```
 
 Take a moment to look at your plot. What are some key takeaways? What are some questions that it produces? How could it be improved?
